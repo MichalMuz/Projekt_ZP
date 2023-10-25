@@ -1,4 +1,10 @@
-print("siema!")
+<<<<<<< HEAD
+print("siema!!!!!!!!!!!!!!")
+
+
+
+
+>>>>>>> refs/remotes/origin/main
 
 
 
