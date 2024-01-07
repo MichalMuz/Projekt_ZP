@@ -301,3 +301,10 @@ class DiskCache:
 
     def set(self, key, value):
         self.cache.set(key, value)
+
+wynajem_kawalerki_start_url = 'https://www.otodom.pl/pl/wyniki/wynajem/kawalerka/cala-polska'
+
+result_details_4 = asyncio.run(get_listing_links_async(wynajem_kawalerki_start_url, DiskCache(expiration_time=2592000),
+                                                       tqdm(total=1, desc="Downloading the number of pages", position=0)))
+
+print("Program finished successfully.")
