@@ -91,6 +91,12 @@ async def get_listing_links_async(start_url, cache, pbar_total):
                             json_filename = f'{unique_name_taken_from_url}.json'
                             csv_filename = f'{unique_name_taken_from_url}.csv'
 
+                            with tqdm(total=len(all_links), desc="Fetching details", position=0,
+                                      unit='link') as pbar_fetch_details:
+                                detailed_results = await asyncio.gather(
+                                    *[fetch_details(session, link, cache, pbar_fetch_details) for link in all_links]
+                                )
+
                 with open(json_filename, 'w', encoding='utf-8') as json_file:
                     json.dump(detailed_results, json_file, ensure_ascii=False, indent=2)
                     print(f'JSON file saved: {json_filename}')
@@ -137,7 +143,7 @@ async def get_listing_links_async(start_url, cache, pbar_total):
                 print(f'CSV file saved: {csv_filename}')
                 print('Number of offers found:', len(all_links))
 
-                return all_links
+                return all_links, detailed_results
             else:
                 print("Error: Unable to determine the number of pages.")
                 return []
