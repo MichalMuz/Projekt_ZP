@@ -36,3 +36,6 @@ class AsyncWebScraper:
                 print(f'Błąd czasu oczekiwania podczas pobierania {url}. Ponawianie próby...')
 
         return None
+    def parse_html(self, html_content):
+        soup = BeautifulSoup(html_content, "lxml")
+        return soup
