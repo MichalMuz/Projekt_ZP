@@ -52,7 +52,17 @@ async def fetch_and_parse(session, url, cache, pbar=None):
     if pbar:
         pbar.update(1)
     return AsyncWebScraper(url).parse_html(html_content)
-async def get_number_of_pages():
+async def get_number_of_pages(session, start_url, cache, pbar=None):
+    html_content = await fetch_and_parse(session, start_url, cache, pbar)
+    if html_content:
+        last_page_links = html_content.find_all('a', {'class': 'eo9qioj1 css-pn5qf0 edo3iif1'})
+        if last_page_links:
+            last_page_number = int(last_page_links[-1]['href'].split('=')[-1])
+            if pbar:
+                pbar.set_postfix(pages=last_page_number)  # Display total pages in postfix
+            print('Number of pages to be analyzed:', last_page_number)
+            return last_page_number
+    return 0
 def get_listing_links(soup):
         home_elements = soup.findAll('li', attrs={'class': 'css-o9b79t e1dfeild0'})
         links = []
