@@ -63,6 +63,24 @@ async def get_number_of_pages(session, start_url, cache, pbar=None):
             print('Number of pages to be analyzed:', last_page_number)
             return last_page_number
     return 0
+async def get_listing_links_async(start_url, cache, pbar_total):
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
+        async with asyncio.Semaphore(500):  # Limit concurrent requests to 10
+            num_pages_to_scrape = await get_number_of_pages(session, start_url, cache, pbar_total)
+
+            if num_pages_to_scrape > 0:
+                all_links = []
+                tasks = [fetch_and_parse(session,
+                                         f'{start_url}?ownerTypeSingleSelect=ALL&by=DEFAULT&direction=DESC&viewType=listing&page={page_num}/',
+                                         cache, pbar_total)
+                         for page_num in range(1, num_pages_to_scrape + 1)]
+
+
+                print('Number of offers found:', len(all_links))
+                return all_links
+            else:
+                print("Error: Unable to determine the number of pages.")
+                return []
 def get_listing_links(soup):
         home_elements = soup.findAll('li', attrs={'class': 'css-o9b79t e1dfeild0'})
         links = []
