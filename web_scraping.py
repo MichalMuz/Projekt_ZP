@@ -1,5 +1,6 @@
 import aiohttp
 from aiohttp.client_exceptions import ClientResponseError
+import asyncio
 from bs4 import BeautifulSoup
 
 class AsyncWebScraper:
@@ -20,4 +21,18 @@ class AsyncWebScraper:
                 print(f"Error during download {e}")
 
         print(f'Failed to download {self.url} after multiple attempts.')
+        return None
+
+    async def fetch_with_retry(self, session, url, headers, timeout=100000, retries=3):
+        for _ in range(retries):
+            try:
+                async with session.get(url, headers=headers, timeout=timeout) as response:
+
+                    return await response.text()
+            except aiohttp.ClientConnectionError as e:
+                print(f"Błąd połączenia: {e}")
+                await asyncio.sleep(2)
+            except asyncio.TimeoutError:
+                print(f'Błąd czasu oczekiwania podczas pobierania {url}. Ponawianie próby...')
+
         return None
