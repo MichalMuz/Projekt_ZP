@@ -4,6 +4,9 @@ import asyncio
 from bs4 import BeautifulSoup
 import diskcache
 from tqdm import tqdm
+import json
+import pandas as pd
+
 class AsyncWebScraper:
     def __init__(self, url, headers=None):
         self.url = url
