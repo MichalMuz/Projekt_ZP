@@ -41,7 +41,17 @@ class AsyncWebScraper:
         soup = BeautifulSoup(html_content, "lxml")
         return soup
 
-async def fetch_and_parse():
+async def fetch_and_parse(session, url, cache, pbar=None):
+    html_content = cache.get(url)
+
+    if html_content is None:
+        while html_content is None:
+            html_content = await AsyncWebScraper(url).fetch_with_retry(session, url, AsyncWebScraper(url).headers)
+            cache.set(url, html_content)
+
+    if pbar:
+        pbar.update(1)
+    return AsyncWebScraper(url).parse_html(html_content)
 async def get_number_of_pages():
 def get_listing_links(soup):
         home_elements = soup.findAll('li', attrs={'class': 'css-o9b79t e1dfeild0'})
