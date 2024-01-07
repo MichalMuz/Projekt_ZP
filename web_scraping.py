@@ -42,3 +42,15 @@ class AsyncWebScraper:
 
 async def fetch_and_parse():
 async def get_number_of_pages():
+def get_listing_links(soup):
+        home_elements = soup.findAll('li', attrs={'class': 'css-o9b79t e1dfeild0'})
+        links = []
+
+        for info in home_elements[3:]:  # Skip the first three elements
+            link_element = info.find('a', class_='css-lsw81o e1dfeild2')
+            if link_element:
+                link = link_element.get('href')
+                full_link = 'https://www.otodom.pl' + link
+                links.append(full_link)
+
+        return links
