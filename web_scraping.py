@@ -75,6 +75,9 @@ async def get_listing_links_async(start_url, cache, pbar_total):
                                          cache, pbar_total)
                          for page_num in range(1, num_pages_to_scrape + 1)]
 
+                # Get a unique part of the start_url for file names
+                unique_name_taken_from_url = start_url.split('/pl/')[1].replace('/', '_')  # Replace slashes with underscores
+
                 with tqdm(total=num_pages_to_scrape, desc="Fetching pages", position=1,
                           unit=' page') as pbar_fetch_pages:
                     soup_list = await asyncio.gather(*tasks)
@@ -84,8 +87,56 @@ async def get_listing_links_async(start_url, cache, pbar_total):
                             all_links.extend(page_links)
                             pbar_fetch_pages.update(1)
 
+                            # Generate unique names for CSV and JSON files
+                            json_filename = f'{unique_name_taken_from_url}.json'
+                            csv_filename = f'{unique_name_taken_from_url}.csv'
 
+                with open(json_filename, 'w', encoding='utf-8') as json_file:
+                    json.dump(detailed_results, json_file, ensure_ascii=False, indent=2)
+                    print(f'JSON file saved: {json_filename}')
+
+                formatted_data = [{'link': item['link'], 'title': item['title'], 'price': item['price'],
+                                   'price_per_m2': item['price_per_m2'], 'offer_location': item['offer_location'],
+                                   'area': item['area'], 'plot_area': item['plot_area'],
+                                   'type_of_development': item['type_of_development'],
+                                   'number_of_rooms': item['number_of_rooms'],
+                                   'heating': item['heating'], 'state_of_completion': item['state_of_completion'],
+                                   'year_of_construction': item['year_of_construction'],
+                                   'parking_space': item['parking_space'], 'rent': item['rent'],
+                                   'floor': item['floor'], 'building_ownership': item['building_ownership'],
+                                   'missing_info_button': item['missing_info_button'],
+                                   'remote_handling': item['remote_handling'],
+                                   'market': item['market'], 'advertiser_type': item['advertiser_type'],
+                                   'free_from': item['free_from'], 'building_material': item['building_material'],
+                                   'windows_type': item['windows_type'], 'floors_num': item['floors_num'],
+                                   'recreational': item['recreational'], 'roof_type': item['roof_type'],
+                                   'roofing': item['roofing'], 'garret_type': item['garret_type'],
+                                   'media_types': item['media_types'], 'security_types': item['security_types'],
+                                   'fence_types': item['fence_types'], 'access_types': item['access_types'],
+                                   'location': item['location'], 'vicinity_types': item['vicinity_types'],
+                                   'extras_types': item['extras_types'], 'lift': item['lift'],
+                                   'equipment_types': item['equipment_types'],
+                                   'rent_to_students': item['rent_to_students'], 'deposit': item['deposit'],
+                                   'number_of_people_per_room': item['number_of_people_per_room'],
+                                   'additional_cost': item['additional_cost'], 'description': item['description']}
+                                  for item in detailed_results]
+
+                csv_columns = ['link', 'title', 'price', 'price_per_m2', 'offer_location', 'area', 'plot_area',
+                               'type_of_development', 'number_of_rooms', 'heating',
+                               'state_of_completion', 'year_of_construction', 'parking_space', 'rent',
+                               'floor', 'building_ownership', 'missing_info_button', 'remote_handling',
+                               'market', 'advertiser_type', 'free_from', 'building_material',
+                               'windows_type', 'floors_num', 'recreational', 'roof_type',
+                               'roofing', 'garret_type', 'media_types', 'security_types',
+                               'fence_types', 'access_types', 'location', 'vicinity_types',
+                               'extras_types', 'lift', 'equipment_types', 'rent_to_students',
+                               'number_of_people_per_room', 'deposit', 'additional_cost', 'description']
+                df = pd.DataFrame(formatted_data, columns=csv_columns)
+                df.to_csv(csv_filename, index=False, encoding='utf-8')
+
+                print(f'CSV file saved: {csv_filename}')
                 print('Number of offers found:', len(all_links))
+
                 return all_links
             else:
                 print("Error: Unable to determine the number of pages.")
