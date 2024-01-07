@@ -39,3 +39,5 @@ class AsyncWebScraper:
     def parse_html(self, html_content):
         soup = BeautifulSoup(html_content, "lxml")
         return soup
+
+    async def fetch_and_parse():
