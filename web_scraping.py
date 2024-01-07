@@ -40,4 +40,5 @@ class AsyncWebScraper:
         soup = BeautifulSoup(html_content, "lxml")
         return soup
 
-    async def fetch_and_parse():
+async def fetch_and_parse():
+async def get_number_of_pages():
