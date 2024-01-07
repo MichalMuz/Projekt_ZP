@@ -65,7 +65,7 @@ async def get_number_of_pages(session, start_url, cache, pbar=None):
     return 0
 async def get_listing_links_async(start_url, cache, pbar_total):
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=1000)) as session:
-        async with asyncio.Semaphore(500):  # Limit concurrent requests to 10
+        async with asyncio.Semaphore(500):  # Limit concurrent requests to 500
             num_pages_to_scrape = await get_number_of_pages(session, start_url, cache, pbar_total)
 
             if num_pages_to_scrape > 0:
@@ -74,6 +74,15 @@ async def get_listing_links_async(start_url, cache, pbar_total):
                                          f'{start_url}?ownerTypeSingleSelect=ALL&by=DEFAULT&direction=DESC&viewType=listing&page={page_num}/',
                                          cache, pbar_total)
                          for page_num in range(1, num_pages_to_scrape + 1)]
+
+                with tqdm(total=num_pages_to_scrape, desc="Fetching pages", position=1,
+                          unit=' page') as pbar_fetch_pages:
+                    soup_list = await asyncio.gather(*tasks)
+                    for soup in soup_list:
+                        if soup:
+                            page_links = get_listing_links(soup)
+                            all_links.extend(page_links)
+                            pbar_fetch_pages.update(1)
 
 
                 print('Number of offers found:', len(all_links))
