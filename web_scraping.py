@@ -2,7 +2,8 @@ import aiohttp
 from aiohttp.client_exceptions import ClientResponseError
 import asyncio
 from bs4 import BeautifulSoup
-
+import diskcache
+from tqdm import tqdm
 class AsyncWebScraper:
     def __init__(self, url, headers=None):
         self.url = url
@@ -54,3 +55,14 @@ def get_listing_links(soup):
                 links.append(full_link)
 
         return links
+class DiskCache:
+    def __init__(self, cache_directory='./cache', expiration_time=86400):
+        self.cache_directory = cache_directory
+        self.expiration_time = expiration_time
+        self.cache = diskcache.Cache(self.cache_directory, expire=self.expiration_time)
+
+    def get(self, key):
+        return self.cache.get(key)
+
+    def set(self, key, value):
+        self.cache.set(key, value)
