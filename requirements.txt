@@ -7,3 +7,8 @@ tqdm~=4.66.1
 fastapi
 lxml
 uvicorn~=0.25.0
+spacy~=3.7.2
+starlette~=0.32.0.post1
+aiofiles~=23.2.1
+
+geopy~=2.4.1
