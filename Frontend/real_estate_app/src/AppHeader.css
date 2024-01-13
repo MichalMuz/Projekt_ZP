@@ -1,0 +1,23 @@
+/* AppHeader.css */
+
+.app-header {
+  background-color:#d5def5 ;
+  color: black;
+  padding: 0px;
+  text-align: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+    z-index: 1000;
+
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 30px;
+  background-color: #97cba9;
+  height: 70px;
+  line-height: 70px;
+
+}

@@ -26,7 +26,7 @@ const handleSearch = async () => {
   return (
     <div>
       <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} />
-      <button onClick={handleSearch}>Search</button>
+      <button onClick={handleSearch}>Wyszukaj</button>
       <ul>
         {results.map((result, index) => (
           <li key={index}>

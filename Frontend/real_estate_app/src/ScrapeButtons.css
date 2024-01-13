@@ -1,0 +1,48 @@
+/* ScrapeButtons.css */
+
+div {
+  display: flex;
+  justify-content: center;
+  margin-top: 0px;
+}
+
+button.dom {
+  background-color: #01257D;
+  color: white;
+  font-size: 18px;
+}
+
+button.mieszkanie {
+  background-color: #CD9C8A;
+  color: white;
+  font-size: 18px;
+}
+
+button.kawalerka {
+  background-color: #96C2DB;
+  color: white;
+  font-size: 18px;
+}
+
+button {
+  margin: 5px;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+
+button:hover {
+  filter: saturate(170%);
+}
+h1 {
+  color: ;
+  font-size: 30px;
+  text-align: center;
+  border: 5px solid #009B4D;
+  background-color: #e0ffcd;
+  padding: 10px;
+  text-align: center;
+  margin-top: 20px;
+}
