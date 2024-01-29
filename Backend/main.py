@@ -34,6 +34,7 @@ except OSError:
         spacy.cli.download("pl_core_news_sm")
         return spacy.load("pl_core_news_sm")
 
+
     nlp = asyncio.run(load_spacy_model())
 
 geolocator = Nominatim(user_agent="your_app_name")
@@ -103,26 +104,60 @@ async def get_all_json_data():
     return all_json_data
 
 
-async def scrape_otodom_logic(url, last_retrieval_file, background_tasks):
-    return await common_scrape_logic(url, last_retrieval_file, background_tasks)
+async def common_scrape_logic(start_url, background_tasks: BackgroundTasks, last_retrieval_file):
+    last_retrieval_time = None
+
+    # Read the last retrieval time from the file if available
+    if os.path.exists(last_retrieval_file):
+        with open(last_retrieval_file, "r") as file:
+            last_retrieval_time = file.read()
+
+    cache_expiration_time = 2592000  # 30 days in seconds
+
+    background_tasks.add_task(
+        get_listing_links_async,
+        start_url,
+        DiskCache(expiration_time=cache_expiration_time),
+        tqdm(total=1, desc="Downloading the number of pages", position=0)
+    )
+
+    current_retrieval_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Save the current retrieval time to the last_data_download_date
+    with open(last_retrieval_file, "w") as last_data_download_date:
+        last_data_download_date.write(current_retrieval_time)
+
+    response_content = {
+        "message": f"Web scraping started for {start_url}",
+        "last_retrieval_time": last_retrieval_time or "Not available",
+        "current_retrieval_time": current_retrieval_time
+    }
+
+    return JSONResponse(content=response_content)
 
 
 @app.get("/ogloszenia_domow")
-async def scrape_otodom_domow(background_tasks: BackgroundTasks):
-    url = 'https://www.otodom.pl/pl/wyniki/sprzedaz/dom/cala-polska'
-    return await scrape_otodom_logic(url, last_retrieval_files["ogloszenia_domow"], background_tasks)
+async def scrape_otodom(background_tasks: BackgroundTasks):
+    return await common_scrape_logic(
+        'https://www.otodom.pl/pl/wyniki/sprzedaz/dom/cala-polska', background_tasks,
+        last_retrieval_files["ogloszenia_domow"]
+    )
 
 
 @app.get("/ogloszenia_mieszkan")
-async def scrape_otodom_mieszkan(background_tasks: BackgroundTasks):
-    url = 'https://www.otodom.pl/pl/wyniki/sprzedaz/mieszkanie/cala-polska'
-    return await scrape_otodom_logic(url, last_retrieval_files["ogloszenia_mieszkan"], background_tasks)
+async def scrape_another_endpoint(background_tasks: BackgroundTasks):
+    return await common_scrape_logic(
+        'https://www.otodom.pl/pl/wyniki/sprzedaz/mieszkanie/cala-polska', background_tasks,
+        last_retrieval_files["ogloszenia_mieszkan"]
+    )
 
 
 @app.get("/ogloszenia_kawalerek")
-async def scrape_otodom_kawalerek(background_tasks: BackgroundTasks):
-    url = 'https://www.otodom.pl/pl/wyniki/sprzedaz/kawalerka/cala-polska'
-    return await scrape_otodom_logic(url, last_retrieval_files["ogloszenia_kawalerek"], background_tasks)
+async def scrape_third_endpoint(background_tasks: BackgroundTasks):
+    return await common_scrape_logic(
+        'https://www.otodom.pl/pl/wyniki/sprzedaz/kawalerka/cala-polska', background_tasks,
+        last_retrieval_files["ogloszenia_kawalerek"]
+    )
 
 
 @app.get("/search")
@@ -239,40 +274,6 @@ def compare_query_to_json(query, json_data):
             })
 
     return matches
-
-
-async def common_scrape_logic(start_url, last_retrieval_file, background_tasks):
-    last_retrieval_time = read_last_retrieval_time(last_retrieval_file)
-    cache_expiration_time = 2592000
-
-    progress_bar = tqdm(total=1, desc="Downloading the number of pages", position=0, dynamic_ncols=True)
-
-    async def task_wrapper():
-        await get_listing_links_async(
-            start_url,
-            DiskCache(expiration_time=cache_expiration_time),
-            progress_bar.update
-        )
-
-    background_tasks.add_task(task_wrapper)
-
-    current_retrieval_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    save_current_retrieval_time(last_retrieval_file)
-
-    while progress_bar.n < progress_bar.total:
-        await asyncio.sleep(1)
-
-    progress_bar.close()
-
-    print(f"Web scraping completed. Time: {current_retrieval_time}")
-
-    response_content = {
-        "message": f"Web scraping started for {start_url}",
-        "last_retrieval_time": last_retrieval_time or "Not available",
-        "current_retrieval_time": current_retrieval_time
-    }
-
-    return JSONResponse(content=response_content)
 
 
 if __name__ == "__main__":
