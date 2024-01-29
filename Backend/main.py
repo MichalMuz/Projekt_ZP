@@ -34,7 +34,6 @@ except OSError:
         spacy.cli.download("pl_core_news_sm")
         return spacy.load("pl_core_news_sm")
 
-
     nlp = asyncio.run(load_spacy_model())
 
 geolocator = Nominatim(user_agent="your_app_name")
@@ -165,13 +164,15 @@ def extract_city_from_location(location):
         if location_info and location_info.raw.get("address"):
             address_details = location_info.raw["address"]
 
+            # Prioritize city information from the address
             city_keys = ["city", "town", "village", "county", "state_district"]
-
             city = next((address_details[key] for key in city_keys if key in address_details and address_details[key]),
                         None)
 
+            # If no city information is found, fall back to other options
             if not city:
                 city = address_details.get("municipality") or address_details.get("state")
+
             return city
         else:
             return None
@@ -180,41 +181,64 @@ def extract_city_from_location(location):
         return None
 
 
+def calculate_similarity(query_tokens, text_tokens):
+    return len(query_tokens.intersection(text_tokens)) / len(query_tokens.union(text_tokens))
+
+
 def compare_query_to_json(query, json_data):
     query_tokens = set(token.text.lower() for token in nlp(query))
+    unique_links = set()
 
     matches = []
+
     for offer in json_data:
         title_tokens = set(token.text.lower() for token in nlp(offer["title"]))
         description_tokens = set(token.text.lower() for token in nlp(offer["description"]))
         location_tokens = set(token.text.lower() for token in nlp(offer.get("offer_location", "")))
 
         offer_city = extract_city_from_location(offer.get("offer_location", ""))
-        print(f"Offer City: {offer_city}")
 
-        # Use a Jaccard similarity threshold for partial matching
-        title_similarity = len(query_tokens.intersection(title_tokens)) / len(query_tokens.union(title_tokens))
-        description_similarity = len(query_tokens.intersection(description_tokens)) / len(
-            query_tokens.union(description_tokens))
-        location_similarity = len(query_tokens.intersection(location_tokens)) / len(query_tokens.union(location_tokens))
+        # Calculate title similarity
+        title_similarity = calculate_similarity(query_tokens, title_tokens)
+
+        # Calculate description similarity
+        description_similarity = calculate_similarity(query_tokens, description_tokens)
+
+        # Include street address in location_tokens
+        street_address_tokens = set(token.text.lower() for token in nlp(offer.get("offer_location", "")))
+
+        # Combine location_tokens and street_address_tokens
+        combined_location_tokens = location_tokens.union(street_address_tokens)
+
+        # Recalculate location_similarity with combined_location_tokens
+        location_similarity = calculate_similarity(query_tokens, combined_location_tokens)
+
+        print(f"Query Tokens: {query_tokens}")
+        print(f"Title Tokens: {title_tokens}")
+        print(f"Description Tokens: {description_tokens}")
+        print(f"Location Tokens: {location_tokens}")
+        print(f"Offer City: {offer_city}")
 
         if offer_city:
             offer_city_tokens = set(token.text.lower() for token in nlp(offer_city))
-            location_similarity_with_city = len(query_tokens.intersection(offer_city_tokens)) / len(
-                query_tokens.union(offer_city_tokens))
+            location_similarity_with_city = calculate_similarity(query_tokens, offer_city_tokens)
             location_similarity = max(location_similarity, location_similarity_with_city)
+
+        # Calculate overall similarity considering title, description, and location
+        overall_similarity = max(title_similarity, description_similarity, location_similarity)
 
         similarity_threshold = 0.4
 
-        if title_similarity > similarity_threshold or description_similarity > similarity_threshold or location_similarity > similarity_threshold:
-            matches.append((max(title_similarity, description_similarity, location_similarity), offer))
+        # Use overall_similarity directly in the decision
+        if overall_similarity > similarity_threshold and offer["link"] not in unique_links:
+            unique_links.add(offer["link"])
+            matches.append({
+                "title": offer["title"],
+                "description": offer["description"],
+                "link": offer["link"]
+            })
 
-    sorted_matches = sorted(matches, key=lambda x: x[0], reverse=True)
-    top_matches = sorted_matches[:5]
-
-    results = [{"title": offer["title"], "description": offer["description"]} for _, offer in top_matches]
-
-    return results
+    return matches
 
 
 async def common_scrape_logic(start_url, last_retrieval_file, background_tasks):
