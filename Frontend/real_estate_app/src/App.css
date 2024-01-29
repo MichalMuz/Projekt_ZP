@@ -1,0 +1,32 @@
+body {
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f0f0f0;
+  box-sizing: border-box;
+}
+
+.container {
+  max-width: 100%;
+  box-sizing: border-box;
+height: 50vh;
+}
+
+h1 {
+  text-align: center;
+  color: white;
+}
+
+/* AppHeader.css */
+
+.app-header {
+  background-color: #3498db;
+  color: #ffffff;
+  padding: 10px;
+  text-align: center;
+}
+
+.app-header h1 {
+  margin: 0;
+}
+
