@@ -226,7 +226,9 @@ def calculate_similarity(query_tokens, text_tokens):
     return similarity
 
 
-similarity_threshold = 0.7
+sim_threshold_title = 0.2
+sim_threshold_localization = 0.49
+sim_threshold_description = 0.2
 
 
 def compare_query_to_json(query, json_data):
@@ -243,10 +245,10 @@ def compare_query_to_json(query, json_data):
         offer_city = extract_city_from_location(offer.get("offer_location", ""))
 
         # Calculate title similarity
-        title_similarity = calculate_similarity(query_tokens, title_tokens)
+        title_sim = calculate_similarity(query_tokens, title_tokens)
 
         # Calculate description similarity
-        description_similarity = calculate_similarity(query_tokens, description_tokens)
+        description_sim = calculate_similarity(query_tokens, description_tokens)
 
         # Include street address in location_tokens
         street_address_tokens = set(token.text.lower() for token in nlp(offer.get("offer_location", "")))
@@ -254,26 +256,35 @@ def compare_query_to_json(query, json_data):
         # Combine location_tokens and street_address_tokens
         combined_location_tokens = location_tokens.union(street_address_tokens)
 
-        # Recalculate location_similarity with combined_location_tokens
-        location_similarity = calculate_similarity(query_tokens, combined_location_tokens)
+        # Recalculate location_sim with combined_location_tokens
+        location_sim = calculate_similarity(query_tokens, combined_location_tokens)
 
         print(f"Query Tokens: {query_tokens}")
         print(f"Title Tokens: {title_tokens}")
         print(f"Description Tokens: {description_tokens}")
         print(f"Location Tokens: {location_tokens}")
         print(f"Offer City: {offer_city}")
+        print(f"Similarity with Title: {title_sim}")
+        print(f"Similarity with Localization: {location_sim}")
+        print(f"Similarity with Description: {sim_threshold_description}")
 
         if offer_city:
             offer_city_tokens = set(token.text.lower() for token in nlp(offer_city))
             location_similarity_with_city = calculate_similarity(query_tokens, offer_city_tokens)
-            location_similarity = max(location_similarity, location_similarity_with_city)
+            location_sim = max(location_sim, location_similarity_with_city)
 
         # Check if any similarity score is above the threshold
         if (
-                title_similarity > similarity_threshold or
-                description_similarity > similarity_threshold or
-                location_similarity > similarity_threshold
-        ) and offer["link"] not in unique_links:
+                location_sim >= sim_threshold_localization and
+                (
+                        title_sim >= sim_threshold_title or description_sim >= sim_threshold_description) or
+                title_sim >= sim_threshold_title and
+                (
+                        location_sim >= sim_threshold_localization or description_sim >= sim_threshold_description) or
+                description_sim >= sim_threshold_description and
+                (
+                        location_sim >= sim_threshold_localization or title_sim >= sim_threshold_title)
+               ) and offer["link"] not in unique_links:
             unique_links.add(offer["link"])
             matches.append({
                 "title": offer["title"],
