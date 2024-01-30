@@ -1,5 +1,6 @@
 # Projekt Aplikacja Nieruchomości
 
+![Aplikacja Nieruchomości](zdjecie aplikacji.gif)
 ## Wstęp
 
 >Aplikacja ta, to narzędzie do przeszukiwania 
