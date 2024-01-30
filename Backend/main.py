@@ -2,13 +2,16 @@ import asyncio
 import json
 import os
 from datetime import datetime
-from fastapi.middleware.cors import CORSMiddleware
 import spacy
-from geopy.geocoders import Nominatim
 import uvicorn
 from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from geopy.geocoders import Nominatim
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
+
 from web_scraping import get_listing_links_async, DiskCache
 
 app = FastAPI()
@@ -107,7 +110,6 @@ async def get_all_json_data():
 async def common_scrape_logic(start_url, background_tasks: BackgroundTasks, last_retrieval_file):
     last_retrieval_time = None
 
-    # Read the last retrieval time from the file if available
     if os.path.exists(last_retrieval_file):
         with open(last_retrieval_file, "r") as file:
             last_retrieval_time = file.read()
@@ -193,7 +195,6 @@ async def search(query: str):
 
 def extract_city_from_location(location):
     try:
-        # Use geopy to extract location details
         location_info = geolocator.geocode(location, language='pl', addressdetails=True)
 
         if location_info and location_info.raw.get("address"):
@@ -204,7 +205,6 @@ def extract_city_from_location(location):
             city = next((address_details[key] for key in city_keys if key in address_details and address_details[key]),
                         None)
 
-            # If no city information is found, fall back to other options
             if not city:
                 city = address_details.get("municipality") or address_details.get("state")
 
@@ -217,7 +217,16 @@ def extract_city_from_location(location):
 
 
 def calculate_similarity(query_tokens, text_tokens):
-    return len(query_tokens.intersection(text_tokens)) / len(query_tokens.union(text_tokens))
+    query_str = " ".join(query_tokens)
+    text_str = " ".join(text_tokens)
+
+    vectorizer = CountVectorizer().fit_transform([query_str, text_str])
+    vectors = vectorizer.toarray()
+    similarity = cosine_similarity(vectors[0].reshape(1, -1), vectors[1].reshape(1, -1))[0][0]
+    return similarity
+
+
+similarity_threshold = 0.7
 
 
 def compare_query_to_json(query, json_data):
@@ -259,13 +268,12 @@ def compare_query_to_json(query, json_data):
             location_similarity_with_city = calculate_similarity(query_tokens, offer_city_tokens)
             location_similarity = max(location_similarity, location_similarity_with_city)
 
-        # Calculate overall similarity considering title, description, and location
-        overall_similarity = max(title_similarity, description_similarity, location_similarity)
-
-        similarity_threshold = 0.4
-
-        # Use overall_similarity directly in the decision
-        if overall_similarity > similarity_threshold and offer["link"] not in unique_links:
+        # Check if any similarity score is above the threshold
+        if (
+                title_similarity > similarity_threshold or
+                description_similarity > similarity_threshold or
+                location_similarity > similarity_threshold
+        ) and offer["link"] not in unique_links:
             unique_links.add(offer["link"])
             matches.append({
                 "title": offer["title"],

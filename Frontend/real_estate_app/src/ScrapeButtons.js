@@ -1,5 +1,3 @@
-// ScrapeButtons.js
-
 import React, { useState } from 'react';
 import './ScrapeButtons.css';
 
