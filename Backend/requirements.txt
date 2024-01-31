@@ -13,6 +13,4 @@ transformers
 geopy~=2.4.1
 scikit-learn
 
-# Komendy preinstalacyjne dla spaCy
-spacy
-pl_core_news_sm
+

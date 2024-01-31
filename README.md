@@ -31,10 +31,13 @@ Aplikacji do Przeszukiwania Ofert Nieruchomości! 🏡✨**
     ├── Backend 
     │ ├── main.py 
     │ ├── requirements.txt 
+    │ ├── .dockerignore    
+    │ ├── .Dockerfile    
     │ └── web_scraping.py 
     │ 
     ├── Frontend 
     │ ├── real_estate_app 
+    │ ├── Dockerfile    
     │ ├── node_modules 
     │ ├── public 
     │ ├── src 
@@ -43,14 +46,24 @@ Aplikacji do Przeszukiwania Ofert Nieruchomości! 🏡✨**
     │ ├── package-lock.json 
     │ └── README.md 
     │ 
+    ├── Photos_of_the_application
+    │ 
     └── .gitignore
+    │ 
+    └── docker-compose.yaml
+    │ 
+    └── README.md
 
 ### Backend  
 ##### main.py Ten plik zawiera główny punkt wejścia dla backendu. 
 #####  requirements.txt Lista zależności Pythona potrzebnych do uruchomienia backendu.  
 #####  web_scraping.py Skrypt napisany w Pythonie do asynchronicznego web scrapingu, wykorzystujący `aiohttp`, `asyncio` i inne biblioteki. 
+##### .dockerignore służy do określania, które pliki i katalogi mają być pomijane podczas procesu budowania obrazu Docker.
+##### Dockerfile Ten plik Dockerfile definiuje sposób tworzenia obrazu Docker do uruchamiania aplikacji backendowej w Pythonie. 
+
 ###  Frontend  
 #####  real_estate_app Ten katalog zawiera kod aplikacji napisanej w React. 
+#####  Dockerfile Ten plik Dockerfile definiuje sposób tworzenia obrazu Docker do uruchamiania aplikacji frontendowej napisanej w React. 
 #####  node_modules Folder zależności Node.js. Generuje się po zainstalowaniu wymaganych pakietów za pomocą `npm install`. 
 #####  public Zasoby statyczne i plik HTML będący punktem wejścia dla aplikacji React. 
 #####  src Kod źródłowy aplikacji React. 
@@ -63,17 +76,21 @@ Aplikacji do Przeszukiwania Ofert Nieruchomości! 🏡✨**
 
 ## Jak Zacząć
 
-1.  **Konfiguracja Backendu:**
+### A.Klasycznie
+
+ 1.  **Konfiguracja Backendu:**
     
     -   Przejdź do katalogu `Backend`.
     -   Zainstaluj zależności: `pip install -r requirements.txt`.
     -   Uruchom backend: `uvicorn main:app --reload --port 8005`.
-2.  **Konfiguracja Frontendu:**
+ 1. **Konfiguracja Frontendu:**
     
     -   Przejdź do katalogu `Frontend`.
     - Przeczytaj instrukcje pliku `README.md` dotyczącą instalacji
 
-3.  **Dostęp do Aplikacji:**
+
+ 1. **Dostęp do Aplikacji:**
+
 
 > W terminalu aplikacji :
 
@@ -82,3 +99,17 @@ b) w folderze Frontend `npm strart`
 
 > Otwórz przeglądarkę internetową i przejdź pod podany adres URL 
 > lub  port aplikacji
+
+### B.Z Dockerem
+
+ - Otwórz terminal
+ - wpisz `docker-compose up -d`
+
+> Backend powinien być dostępny pod adresem
+>  http://localhost:8005.  
+> Frontend powinien być dostępny pod adresem
+>  http://localhost:3000.
+
+**Pamiętaj, że program opiera się na plikach json**
+**Jeśli ich nie będzie wygeneruj je odpowiednimi przyciskami**
+**lub stwórz je na własną rękę**
